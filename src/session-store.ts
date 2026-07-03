@@ -140,6 +140,30 @@ function parseTimeRange(
   return { startedAt, updatedAt, userCount, assistantCount };
 }
 
+// --- Rename map from history ---
+
+const RENAME_PREFIX = '/rename ';
+
+function buildRenameMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const historyPath = join(claudeDir(), 'history.jsonl');
+  if (!existsSync(historyPath)) return map;
+
+  const content = readFileSync(historyPath, 'utf-8');
+  for (const line of content.split('\n').filter(Boolean)) {
+    try {
+      const entry = JSON.parse(line) as { display?: string; sessionId?: string };
+      if (entry.display && entry.display.startsWith(RENAME_PREFIX) && entry.sessionId) {
+        const name = entry.display.slice(RENAME_PREFIX.length).trim();
+        if (name) map.set(entry.sessionId, name);
+      }
+    } catch {
+      // skip corrupt lines
+    }
+  }
+  return map;
+}
+
 // --- Public API ---
 
 export function getProjectSessions(projectPath: string): SessionInfo[] {
@@ -147,6 +171,7 @@ export function getProjectSessions(projectPath: string): SessionInfo[] {
   if (!existsSync(dir)) return [];
 
   const activeMap = parseActiveSessions();
+  const renameMap = buildRenameMap();
   const files = readdirSync(dir).filter(f => f.endsWith('.jsonl'));
 
   return files.map(file => {
@@ -173,7 +198,7 @@ export function getProjectSessions(projectPath: string): SessionInfo[] {
       updatedAt: range.updatedAt,
       activePid: active?.pid ?? null,
       activeStatus: active?.status ?? null,
-      name: active?.name ?? null,
+      name: active?.name ?? renameMap.get(sessionId) ?? null,
     };
   }).sort((a, b) => (b.updatedAt ?? b.startedAt ?? 0) - (a.updatedAt ?? a.startedAt ?? 0));
 }
@@ -187,6 +212,7 @@ export function getSessionDetails(
 
   const stats = statSync(filePath);
   const activeMap = parseActiveSessions();
+  const renameMap = buildRenameMap();
   const active = activeMap.get(sessionId);
   const range = parseTimeRange(filePath);
   const totalLines = countLines(filePath);
@@ -202,7 +228,7 @@ export function getSessionDetails(
     updatedAt: range.updatedAt,
     activePid: active?.pid ?? null,
     activeStatus: active?.status ?? null,
-    name: active?.name ?? null,
+    name: active?.name ?? renameMap.get(sessionId) ?? null,
   };
 }
 
