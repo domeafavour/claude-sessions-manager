@@ -1,0 +1,24 @@
+{
+  "name": "claude-sessions-manager",
+  "version": "0.1.0",
+  "description": "CLI to manage Claude Code sessions",
+  "type": "module",
+  "bin": {
+    "cs": "./dist/index.js",
+    "claude-session": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "tsc"
+  },
+  "dependencies": {
+    "claude-sessions-manager": "link:",
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.0"
+  }
+}

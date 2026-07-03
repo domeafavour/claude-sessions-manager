@@ -1,0 +1,6 @@
+allowBuilds:
+  '@anthropic-ai/claude-code': true
+  esbuild: set this to true or false
+  reasonix: true
+overrides:
+  claude-sessions-manager: 'link:'
