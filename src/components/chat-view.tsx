@@ -6,10 +6,15 @@ function formatTime(ts: number | null): string {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+const MAX_LINES = 20;
+
 function Message({ msg }: { msg: SessionMessage }) {
   const label = msg.type === 'user' ? 'user' : 'assistant';
   const color = msg.type === 'user' ? 'green' : 'blue';
   const time = formatTime(msg.timestamp);
+  const lines = msg.content.trim().split('\n');
+  const capped = lines.slice(0, MAX_LINES);
+  const truncated = lines.length > MAX_LINES;
 
   return (
     <Box flexDirection="column">
@@ -18,9 +23,10 @@ function Message({ msg }: { msg: SessionMessage }) {
         <Text color={color}>{`◉ ${label}`}</Text>
         {time && <Text dimColor>{`  ${time}`}</Text>}
       </Box>
-      {msg.content.trim() && (
-        <Box paddingLeft={4}>
-          <Text>{msg.content}</Text>
+      {lines.length > 0 && lines[0] !== '' && (
+        <Box paddingLeft={4} flexDirection="column">
+          {capped.map((line, i) => <Text key={i}>{line}</Text>)}
+          {truncated && <Text dimColor>{'  … (truncated)'}</Text>}
         </Box>
       )}
     </Box>
